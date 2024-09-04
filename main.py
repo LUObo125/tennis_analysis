@@ -15,7 +15,7 @@ from copy import deepcopy
 
 def main():
     # Read Video
-    input_video_path = "input_videos/input_video.mp4"
+    input_video_path = "input_videos/input_video.avi"
     video_frames = read_video(input_video_path)
 
     # Detect Players and Ball
@@ -39,7 +39,7 @@ def main():
     court_keypoints = court_line_detector.predict(video_frames[0])
 
     # choose players
-    player_detections = player_tracker.choose_and_filter_players(court_keypoints, player_detections)
+    player_detection = player_tracker.choose_and_filter_players(court_keypoints, player_detections)
 
     # MiniCourt
     mini_court = MiniCourt(video_frames[0]) 
@@ -48,7 +48,7 @@ def main():
     ball_shot_frames= ball_tracker.get_ball_shot_frames(ball_detections)
 
     # Convert positions to mini court positions
-    player_mini_court_detections, ball_mini_court_detections = mini_court.convert_bounding_boxes_to_mini_court_coordinates(player_detections, 
+    player_mini_court_detections, ball_mini_court_detections = mini_court.convert_bounding_boxes_to_mini_court_coordinates(player_detection, 
                                                                                                           ball_detections,
                                                                                                           court_keypoints)
 
@@ -124,7 +124,7 @@ def main():
 
     # Draw output
     ## Draw Player Bounding Boxes
-    output_video_frames= player_tracker.draw_bboxes(video_frames, player_detections)
+    output_video_frames= player_tracker.draw_bboxes(video_frames, player_detection)
     output_video_frames= ball_tracker.draw_bboxes(output_video_frames, ball_detections)
 
     ## Draw court Keypoints

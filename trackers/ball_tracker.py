@@ -3,12 +3,74 @@ import cv2
 import pickle
 import pandas as pd
 
+def calculate_distance(arr_list):
+  result = []
+  last_valid_arr = None
+
+  for arr in arr_list:
+    if arr:  # 如果数组非空
+      if last_valid_arr is not None:
+        dist1 = ((arr[0] - last_valid_arr[0]) ** 2 + (arr[1] - last_valid_arr[1]) ** 2) ** 0.5
+        dist2 = ((arr[2] - last_valid_arr[2]) ** 2 + (arr[3] - last_valid_arr[3]) ** 2) ** 0.5
+        result.append([dist1, dist2])
+      else:
+        result.append(arr)  # 第一个非空数组，直接添加到结果中
+      last_valid_arr = arr
+    else:
+      result.append([])  # 空数组，添加到结果中
+
+  return result
+
+def calculate_distances(lst, threshold):
+  """
+  计算非空数组与前序最近非空数组中两点距离，并将超过阈值的数组置空。
+
+  Args:
+    lst: 包含多个数组的列表，每个数组表示两个点[x1, y1, x2, y2]。
+    threshold: 距离阈值。
+
+  Returns:
+    处理后的列表，其中超过阈值的数组被置空。
+  """
+
+  copyoflst = lst.copy()
+  result = copyoflst
+  prev_non_empty = None
+  i_pre = None
+
+  #while True:
+  for i in range(len(result)):
+    if result[i]:  # 如果当前数组非空
+        if prev_non_empty:
+            # 计算距离
+            dist1 = ((result[i][0] - prev_non_empty[0]) ** 2 + (result[i][1] - prev_non_empty[1]) ** 2) ** 0.5 / (i-i_pre)
+            dist2 = ((result[i][2] - prev_non_empty[2]) ** 2 + (result[i][3] - prev_non_empty[3]) ** 2) ** 0.5 / (i-i_pre)
+
+            # 如果距离超过阈值，将当前数组置空
+            if dist1 > threshold or dist2 > threshold:
+                result[i] = []
+
+        prev_non_empty = result[i]  # 更新前序非空数组
+        i_pre = i
+    """     if result == copyoflst:  # 如果列表不再变化，说明所有距离都满足条件
+        break
+    copyoflst = result """
+  return result
+
 class BallTracker:
     def __init__(self,model_path):
         self.model = YOLO(model_path)
 
     def interpolate_ball_positions(self, ball_positions):
         ball_positions = [x.get(1,[]) for x in ball_positions]
+
+        
+        while True:
+            distance = calculate_distance(ball_positions)
+            new_lst = calculate_distances(ball_positions, 100)
+            if new_lst == ball_positions:  # 如果列表不再变化，说明所有距离都满足条件
+                break
+            ball_positions = new_lst
         # convert the list into pandas dataframe
         df_ball_positions = pd.DataFrame(ball_positions,columns=['x1','y1','x2','y2'])
 
@@ -72,7 +134,7 @@ class BallTracker:
         return ball_detections
 
     def detect_frame(self,frame):
-        results = self.model.predict(frame,conf=0.15)[0]
+        results = self.model.predict(frame,conf=0.15, device=0)[0]
 
         ball_dict = {}
         for box in results.boxes:

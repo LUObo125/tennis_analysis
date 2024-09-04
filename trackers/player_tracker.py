@@ -14,8 +14,15 @@ class PlayerTracker:
         chosen_player = self.choose_players(court_keypoints, player_detections_first_frame)
         filtered_player_detections = []
         for player_dict in player_detections:
-            filtered_player_dict = {track_id: bbox for track_id, bbox in player_dict.items() if track_id in chosen_player}
+            filtered_player_dict={}
+            for track_id, bbox in player_dict.items():
+                if track_id == chosen_player[0]:
+                    filtered_player_dict[1] = bbox
+                elif track_id == chosen_player[1]:
+                    filtered_player_dict[2] = bbox
             filtered_player_detections.append(filtered_player_dict)
+            """ filtered_player_dict = {track_id: bbox for track_id, bbox in player_dict.items() if track_id in chosen_player}
+            filtered_player_detections.append(filtered_player_dict) """
         return filtered_player_detections
 
     def choose_players(self, court_keypoints, player_dict):
@@ -57,7 +64,7 @@ class PlayerTracker:
         return player_detections
 
     def detect_frame(self,frame):
-        results = self.model.track(frame, persist=True)[0]
+        results = self.model.track(frame, persist=True, device=0)[0]
         id_name_dict = results.names
 
         player_dict = {}
