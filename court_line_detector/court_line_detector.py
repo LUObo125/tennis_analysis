@@ -28,6 +28,9 @@ class CourtLineDetector:
         keypoints[::2] *= original_w / 224.0
         keypoints[1::2] *= original_h / 224.0
 
+        keypoints = np.append(keypoints, [((keypoints[0]+keypoints[2])/2), ((keypoints[1]+keypoints[3])/2), ((keypoints[4]+keypoints[6])/2), ((keypoints[5]+keypoints[7])/2)])
+
+
         return keypoints
 
     def draw_keypoints(self, image, keypoints):
